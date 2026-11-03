@@ -1,0 +1,33 @@
+# One-click deploy on Render: New + > Blueprint > pick this repo.
+databases:
+  - name: wanderwise-db
+    plan: free
+    databaseName: wanderwise
+    user: wanderwise
+
+services:
+  - type: web
+    name: wanderwise-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wanderwise-db
+          property: connectionString
+      # Tighten this to your frontend URL once it is deployed,
+      # e.g. https://your-frontend.onrender.com
+      - key: CORS_ORIGINS
+        value: "*"
+      # Optional: set in the Render dashboard to enable AI itineraries.
+      - key: AI_API_KEY
+        sync: false
